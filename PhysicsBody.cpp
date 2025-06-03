@@ -1,19 +1,19 @@
 #include "PhysicsBody.h"
 
 PhysicsBody::PhysicsBody(const Vec2& position, const float radius)
-	: _positionOld(position), _positionCurrent(position), _acceleration{ 0, 0 }, _radius(radius)
+	: _positionLast(position), _position(position), _acceleration{ 0, 0 }, _radius(radius)
 {
 }
 
 void PhysicsBody::updatePosition(const float dt)
 {
-	const Vec2 velocity = _positionCurrent - _positionOld;
+	// Compute how much we moved
+	const Vec2 displacement = _position - _positionLast;
+	// Update position
+	_positionLast = _position;
 
-	_positionOld = _positionCurrent;
-
-	// Verlet integration
-	_positionCurrent = _positionCurrent + velocity + _acceleration * dt * dt;
-
+	_position = _position + displacement + _acceleration * (dt * dt);
+	// Reset acceleration
 	_acceleration = {};
 }
 
@@ -24,12 +24,12 @@ void PhysicsBody::accelerate(const Vec2& acceleration)
 
 Vec2 PhysicsBody::getPosition() const
 {
-	return _positionCurrent;
+	return _position;
 }
 
 void PhysicsBody::setPosition(const Vec2& position)
 {
-	_positionCurrent = position;
+	_position = position;
 }
 
 float PhysicsBody::getRadius() const
@@ -40,6 +40,6 @@ float PhysicsBody::getRadius() const
 void PhysicsBody::setVelocity(const Vec2& velocity, const float dt)
 {
 	// velocity = (current - previous) / dt
-	   // So: previous = current - velocity * dt
-	_positionOld = _positionCurrent - velocity * dt;
+	// So: previous = current - velocity * dt
+	_positionLast = _position - velocity * dt;
 }
