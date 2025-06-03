@@ -37,6 +37,16 @@ float PhysicsBody::getRadius() const
 	return _radius;
 }
 
+float PhysicsBody::getMass() const
+{
+	return _radius;
+}
+
+Vec2 PhysicsBody::getVelocity(const float dt) const
+{
+	return (_position - _positionLast) / dt;
+}
+
 void PhysicsBody::setVelocity(const Vec2& velocity, const float dt)
 {
 	// velocity = (current - previous) / dt

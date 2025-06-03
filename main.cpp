@@ -27,14 +27,14 @@ int main()
 	std::uniform_int_distribution<> radiusDistribution(10, 20); // Range
 
 	Renderer renderer(sf::VideoMode(windowSize), "Sagiv's Physics Engine", frameRate);
-	Solver solver({ windowCenter, std::min(windowSize.x, windowSize.y) * 0.4f }, subSteps);
+	Solver solver({ windowCenter, std::min(windowSize.x, windowSize.y) * 0.4f }, dt, subSteps);
 
 	// Ball spawning
 	Vec2 spawningLocation = windowCenter + Vec2{ 90, -(solver.getConstraint().radius * 0.9f + bodyRadius) };
 	sf::Clock spawnClock;
 	const float spawnInterval = 0.05f; // seconds
 	int ballsSpawned = 0;
-	const int maxBalls = 200;
+	const int maxBalls = 300;
 	std::vector<PhysicsBody> bodies = {};
 	const float spawnSpeed = 1.0f;  // Initial velocity magnitude
 	const float maxAngle = 1.0f;      // Angle variation range (radians)
@@ -57,7 +57,7 @@ int main()
 			spawnClock.restart();
 		}
 
-		solver.update(bodies, dt, gravity);
+		solver.update(bodies, gravity);
 		renderer.render(bodies, solver.getConstraint());
 	}
 

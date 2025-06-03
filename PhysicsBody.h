@@ -14,12 +14,14 @@ public:
 	void setPosition(const Vec2& position);
 
 	float getRadius() const;
+	float getMass() const; // Returns the radius for now
 
+	Vec2 getVelocity(const float dt) const;
 	void setVelocity(const Vec2& velocity, const float dt);
 
 private:
-	Vec2 _positionOld;
-	Vec2 _positionCurrent;
+	Vec2 _positionLast;
+	Vec2 _position;
 	Vec2 _acceleration;
 
 	float _radius;

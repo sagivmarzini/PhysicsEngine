@@ -13,7 +13,7 @@ void Renderer::render(const std::vector<PhysicsBody>& bodies, const Constraint& 
 	for (const auto& body : bodies)
 	{
 		sf::CircleShape circle(body.getRadius());
-		circle.setFillColor(sf::Color::Green);
+		circle.setFillColor(sf::Color::Red);
 		circle.setOutlineThickness(2);
 
 		circle.setOrigin({ body.getRadius(), body.getRadius() }); // Set origin to center

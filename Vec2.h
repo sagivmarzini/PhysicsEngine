@@ -11,5 +11,7 @@ struct Vec2
 	Vec2 operator*(const float s) const;
 	Vec2 operator/(const float s) const;
 
-	float getDistance() const;
+	float distance() const;
+	void normalize();
+	float dot(const Vec2& other) const;
 };
