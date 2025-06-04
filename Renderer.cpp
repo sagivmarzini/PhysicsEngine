@@ -6,44 +6,42 @@ Renderer::Renderer(const sf::VideoMode& videoMode, const std::string& windowName
 	_window.setFramerateLimit(maxFrameRate);
 }
 
-void Renderer::render(const std::vector<PhysicsBody>& bodies, const Constraint& constraint)
+void Renderer::drawCircle(Vector2 center, float radius, float borderThickness, sf::Color color)
 {
-	_window.clear(sf::Color::Black);
-
-	for (const auto& body : bodies)
-	{
-		sf::CircleShape circle(body.getRadius());
-		circle.setFillColor(sf::Color::Red);
-		circle.setOutlineThickness(2);
-
-		circle.setOrigin({ body.getRadius(), body.getRadius() }); // Set origin to center
-		const auto& position = body.getPosition();
-		circle.setPosition({ position.x, position.y });
-
-		_window.draw(circle);
-	}
-
-	// Render the constraint
-	sf::CircleShape circle(constraint.radius);
+	sf::CircleShape circle(radius);
+	circle.setOrigin({ radius, radius });
+	circle.setPosition({ center.x, center.y });
+	circle.setFillColor(color);
 	circle.setOutlineColor(sf::Color::White);
-	circle.setOutlineThickness(3);
-	circle.setFillColor(sf::Color::Transparent);
-
-	circle.setOrigin({ constraint.radius, constraint.radius }); // Set origin to center
-	const auto& position = constraint.position;
-	circle.setPosition({ position.x, position.y });
-
+	circle.setOutlineThickness(borderThickness);
 	_window.draw(circle);
+}
 
-	_window.display();
+void Renderer::drawRectangle(Vector2 topLeft, float width, float height, float borderThickness, sf::Color color)
+{
+	sf::RectangleShape shape({ width - 2 * borderThickness, height - 2 * borderThickness });
+	shape.setPosition({ topLeft.x + borderThickness, topLeft.y + borderThickness });
+	shape.setFillColor(color);
+	shape.setOutlineColor(sf::Color::White);
+	shape.setOutlineThickness(borderThickness);
+	_window.draw(shape);
 }
 
 void Renderer::processEvents()
 {
 	const std::optional event = _window.pollEvent();
 
-	if (event.has_value() && event->is<sf::Event::Closed>())
+	if (!event.has_value()) return;
+
+	if (event->is<sf::Event::Closed>())
+	{
 		_window.close();
+	}
+	else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+	{
+		if (keyPressed->scancode == sf::Keyboard::Scancode::Escape)
+			_window.close();
+	}
 }
 
 bool Renderer::isOpen() const
@@ -59,4 +57,14 @@ int Renderer::getWindowWidth() const
 int Renderer::getWindowHeight() const
 {
 	return _window.getSize().y;
+}
+
+void Renderer::clear(sf::Color color)
+{
+	_window.clear(color);
+}
+
+void Renderer::display()
+{
+	_window.display();
 }

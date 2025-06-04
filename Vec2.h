@@ -1,17 +1,18 @@
 #pragma once
 
-struct Vec2
+struct Vector2
 {
 	float x;
 	float y;
 
-	Vec2 operator+(const Vec2& other) const;
-	Vec2& operator+=(const Vec2& other);
-	Vec2 operator-(const Vec2& other) const;
-	Vec2 operator*(const float s) const;
-	Vec2 operator/(const float s) const;
+	Vector2 operator+(const Vector2& other) const;
+	Vector2& operator+=(const Vector2& other);
+	Vector2 operator-(const Vector2& other) const;
+	Vector2 operator*(const float s) const;
+	Vector2 operator/(const float s) const;
 
 	float distance() const;
-	void normalize();
-	float dot(const Vec2& other) const;
+	float distanceSquared() const;
+	Vector2 normal() const;
+	float dot(const Vector2& other) const;
 };

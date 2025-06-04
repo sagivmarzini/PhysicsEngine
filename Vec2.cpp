@@ -1,12 +1,12 @@
 #include "Vec2.h"
 #include <math.h>
 
-Vec2 Vec2::operator+(const Vec2& other) const
+Vector2 Vector2::operator+(const Vector2& other) const
 {
-	return Vec2{ x + other.x, y + other.y };
+	return Vector2{ x + other.x, y + other.y };
 }
 
-Vec2& Vec2::operator+=(const Vec2& other)
+Vector2& Vector2::operator+=(const Vector2& other)
 {
 	x += other.x;
 	y += other.y;
@@ -14,38 +14,42 @@ Vec2& Vec2::operator+=(const Vec2& other)
 	return *this;
 }
 
-Vec2 Vec2::operator-(const Vec2& other) const
+Vector2 Vector2::operator-(const Vector2& other) const
 {
-	return Vec2{ x - other.x, y - other.y };
+	return Vector2{ x - other.x, y - other.y };
 }
 
-Vec2 Vec2::operator*(const float s) const
+Vector2 Vector2::operator*(const float s) const
 {
-	return Vec2{ x * s, y * s };
+	return Vector2{ x * s, y * s };
 }
 
-Vec2 Vec2::operator/(const float s) const
+Vector2 Vector2::operator/(const float s) const
 {
-	return Vec2{ x / s, y / s };
+	return Vector2{ x / s, y / s };
 }
 
-float Vec2::distance() const
+float Vector2::distance() const
 {
 	return sqrt(x * x + y * y);
 }
 
-void Vec2::normalize()
+float Vector2::distanceSquared() const
 {
-	float length = distance();
-
-	if (length > 0.0f)
-	{
-		x /= length;
-		y /= length;
-	}
+	return x * x + y * y;
 }
 
-float Vec2::dot(const Vec2& other) const
+Vector2 Vector2::normal() const
+{
+	if (const float length = distance() > 0.0f)
+	{
+		return Vector2{ x / length, y / length };
+	}
+
+	return Vector2{ 0,0 };
+}
+
+float Vector2::dot(const Vector2& other) const
 {
 	return x * other.x + y * other.y;
 }

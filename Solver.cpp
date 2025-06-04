@@ -6,7 +6,7 @@ Solver::Solver(const Constraint& constraint, const float deltaTime, const int su
 {
 }
 
-void Solver::update(std::vector<PhysicsBody>& bodies, const Vec2& gravity) const
+void Solver::update(std::vector<PhysicsBody>& bodies, const Vector2& gravity) const
 {
 	const float subDt = _deltaTime / static_cast<float>(_subSteps);
 
@@ -20,7 +20,7 @@ void Solver::update(std::vector<PhysicsBody>& bodies, const Vec2& gravity) const
 		}
 
 		// Solve collisions for all bodies in this substep
-		solveCollisions(bodies); // Note: pass all bodies, not individual
+		//solveCollisions(bodies);
 
 		// Update positions for all bodies using subDt
 		for (auto& body : bodies)
@@ -40,37 +40,15 @@ void Solver::updatePosition(PhysicsBody& body, const float deltaTime) const
 	body.updatePosition(deltaTime);
 }
 
-void Solver::applyGravity(PhysicsBody& body, const Vec2& gravity) const
+void Solver::applyGravity(PhysicsBody& body, const Vector2& gravity) const
 {
 	body.accelerate(gravity);
 }
 
 void Solver::applyConstraint(PhysicsBody& body) const
 {
-	const Vec2 toConstraint = body.getPosition() - _constraint.position;
-	const float distanceToConstraint = toConstraint.distance();
-
-	// Only apply constraint if body is outside the boundary
-	if (distanceToConstraint + body.getRadius() > _constraint.radius)
-	{
-		// Calculate direction from constraint center to body
-		Vec2 directionNormal = toConstraint;
-		directionNormal.normalize();
-
-		// Position the body at the constraint boundary
-		body.setPosition(_constraint.position + directionNormal * (_constraint.radius - body.getRadius()));
-
-		// Reflect velocity component that's pointing into the constraint
-		const Vec2 velocity = body.getVelocity(_deltaTime);
-		float velocityAlongNormal = velocity.dot(directionNormal);
-
-		// Only reflect if moving into the constraint
-		if (velocityAlongNormal > 0)
-		{
-			Vec2 reflectedVelocity = velocity - directionNormal * 2.0f * velocityAlongNormal;
-			body.setVelocity(reflectedVelocity * 0.9f, _deltaTime); // Add damping
-		}
-	}
+	if (circleIntersectsRectEdges(body.getPosition(), body.getRadius(), _constraint.position, _constraint.width, _constraint.height))
+		body.setVelocity(body.getVelocity(_deltaTime) * -1, _deltaTime);
 }
 
 void Solver::solveCollisions(std::vector<PhysicsBody>& bodies) const
@@ -81,35 +59,51 @@ void Solver::solveCollisions(std::vector<PhysicsBody>& bodies) const
 		{
 			if (&body == &otherBody) continue; // Skip self-collision
 
-			Vec2 relativeVelocity = body.getVelocity(_deltaTime) - otherBody.getVelocity(_deltaTime);
+			const Vector2 collisionAxis = body.getPosition() - otherBody.getPosition();
+			const float distance = collisionAxis.distance();
+			const float radiiSum = body.getRadius() + otherBody.getRadius();
 
-			Vec2 collisionAxisNormal = body.getPosition() - otherBody.getPosition();
-			float distance = collisionAxisNormal.distance();
-			float radiusSum = body.getRadius() + otherBody.getRadius();
-
-			if (distance == 0.0f) continue; // Prevent division by zero
-
-			collisionAxisNormal.normalize();
-
-			float penetration = radiusSum - distance;
-			if (penetration > 0)
+			if (distance < radiiSum)
 			{
-				Vec2 correction = collisionAxisNormal * (penetration / 2.0f);
-				body.setPosition(body.getPosition() + correction);
-				otherBody.setPosition(otherBody.getPosition() - correction);
+				float penetration = radiiSum - distance;
+
+				const Vector2 collisionAxisNormal = collisionAxis.normal();
+
+				body.setPosition(collisionAxisNormal * -1 * (penetration / 2));
+				otherBody.setPosition(collisionAxisNormal * (penetration / 2));
 			}
-
-			float velocityAlongNormal = relativeVelocity.dot(collisionAxisNormal);
-
-			// Skip if separating
-			if (velocityAlongNormal > 0) continue;
-
-			float restitution = 1.0f; // perfect elastic collision for now
-			float impulseMag = -(1 + restitution) * velocityAlongNormal / (1 / body.getMass() + 1 / otherBody.getMass());
-
-			Vec2 impulse = collisionAxisNormal * impulseMag;
-			body.setVelocity(body.getVelocity(_deltaTime) + impulse, _deltaTime);
-			otherBody.setVelocity(otherBody.getVelocity(_deltaTime) - impulse, _deltaTime);
 		}
 	}
+}
+
+Vector2 Solver::closestPointOnLine(const Vector2& p1, const Vector2& p2, const Vector2& circleCenter) const
+{
+	Vector2 line = p2 - p1;
+	Vector2 toCircle = circleCenter - p1;
+
+	float t = toCircle.dot(line) / line.dot(line);
+	t = std::clamp(t, 0.0f, 1.0f);
+
+	return p1 + line * t;
+}
+
+bool Solver::circleIntersectsLine(const Vector2& p1, const Vector2& p2, const Vector2& center, float radius) const
+{
+	Vector2 closest = closestPointOnLine(p1, p2, center);
+	float distSquared = (center - closest).distanceSquared();
+
+	return distSquared <= radius * radius;
+}
+
+bool Solver::circleIntersectsRectEdges(const Vector2& center, float radius, const Vector2& topLeft, float width, float height) const
+{
+	Vector2 topRight = topLeft + Vector2(width, 0);
+	Vector2 bottomLeft = topLeft + Vector2(0, height);
+	Vector2 bottomRight = topLeft + Vector2(width, height);
+
+	return
+		circleIntersectsLine(topLeft, topRight, center, radius) || // top
+		circleIntersectsLine(topRight, bottomRight, center, radius) || // right
+		circleIntersectsLine(bottomRight, bottomLeft, center, radius) || // bottom
+		circleIntersectsLine(bottomLeft, topLeft, center, radius); // left
 }

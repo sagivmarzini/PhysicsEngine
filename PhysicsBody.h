@@ -2,27 +2,31 @@
 
 #include "Vec2.h"
 
+class Renderer;
+
 class PhysicsBody
 {
 public:
-	PhysicsBody(const Vec2& position, const float radius);
+	PhysicsBody(const Vector2& position, const float radius);
 
 	void updatePosition(const float dt);
-	void accelerate(const Vec2& acceleration);
+	void accelerate(const Vector2& acceleration);
 
-	Vec2 getPosition() const;
-	void setPosition(const Vec2& position);
+	Vector2 getPosition() const;
+	void setPosition(const Vector2& position);
 
 	float getRadius() const;
 	float getMass() const; // Returns the radius for now
 
-	Vec2 getVelocity(const float dt) const;
-	void setVelocity(const Vec2& velocity, const float dt);
+	Vector2 getVelocity(const float dt) const;
+	void setVelocity(const Vector2& velocity, const float dt);
+
+	void draw(Renderer& renderer) const;
 
 private:
-	Vec2 _positionLast;
-	Vec2 _position;
-	Vec2 _acceleration;
+	Vector2 _positionLast;
+	Vector2 _position;
+	Vector2 _acceleration;
 
 	float _radius;
 };

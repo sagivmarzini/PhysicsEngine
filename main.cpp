@@ -13,52 +13,53 @@ constexpr sf::Vector2u windowSize = { 1500, 800 };
 
 int main()
 {
-	// Random stuff
-	std::random_device rd; // Seed source
-	std::mt19937 gen(rd()); // Mersenne Twister RNG
-
 	const uint32_t frameRate = 60;
 	const float dt = 1.0f / frameRate;
-	const int subSteps = 16;
-	const Vec2 windowCenter{ static_cast<float>(windowSize.x) / 2.0f, static_cast<float>(windowSize.y) / 2.0f };
+	const int subSteps = 8;
+	const Vector2 windowCenter{ windowSize.x / 2.0f, windowSize.y / 2.0f };
 
-	Vec2 gravity{ 0.0f, 1000.f };
+	Vector2 gravity{ 0.0f, 1000.0f };
 	float bodyRadius = 20.0f;
-	std::uniform_int_distribution<> radiusDistribution(10, 20); // Range
 
 	Renderer renderer(sf::VideoMode(windowSize), "Sagiv's Physics Engine", frameRate);
-	Solver solver({ windowCenter, std::min(windowSize.x, windowSize.y) * 0.4f }, dt, subSteps);
+	Solver solver(Constraint{ Vector2{0,0}, (float)windowSize.x, (float)windowSize.y }, dt, subSteps);
 
 	// Ball spawning
-	Vec2 spawningLocation = windowCenter + Vec2{ 90, -(solver.getConstraint().radius * 0.9f + bodyRadius) };
+	Vector2 spawningLocation = windowCenter + Vector2{ 90, 0 };
 	sf::Clock spawnClock;
-	const float spawnInterval = 0.05f; // seconds
+	const float spawnInterval = 1.0f; // seconds
 	int ballsSpawned = 0;
-	const int maxBalls = 300;
+	const int maxBalls = 100;
 	std::vector<PhysicsBody> bodies = {};
-	const float spawnSpeed = 1.0f;  // Initial velocity magnitude
-	const float maxAngle = 1.0f;      // Angle variation range (radians)
-	const Vec2 fixedSpawnPosition = windowCenter + Vec2{ 0, -200 };
 	sf::Clock timeClock;
 
-	while (renderer.isOpen()) {
+	while (renderer.isOpen())
+	{
+		renderer.clear(sf::Color::Black);
 		renderer.processEvents();
 
 		// Spawn balls
 		if (ballsSpawned < maxBalls && spawnClock.getElapsedTime().asSeconds() >= spawnInterval)
 		{
-			bodyRadius = radiusDistribution(gen);
-			spawningLocation = windowCenter + Vec2{ static_cast<float>(ballsSpawned * 50 % static_cast<int>(1.9f * solver.getConstraint().radius)) - (solver.getConstraint().radius * 0.9f) - bodyRadius, 0 };
-
+			spawningLocation = Vector2{ static_cast<float>((static_cast<int>(ballsSpawned * 100 + 2 * bodyRadius) % windowSize.x)), windowCenter.y };
 			// Create the ball
 			bodies.emplace_back(spawningLocation, bodyRadius);
+			bodies[ballsSpawned].setVelocity(bodies[ballsSpawned].getPosition() + Vector2{ 1, 1 }, dt);
 
 			ballsSpawned++;
 			spawnClock.restart();
 		}
 
 		solver.update(bodies, gravity);
-		renderer.render(bodies, solver.getConstraint());
+
+		// Render everything
+		solver.getConstraint().draw(renderer);
+		for (const auto& body : bodies)
+		{
+			body.draw(renderer);
+		}
+
+		renderer.display();
 	}
 
 	return 0;
